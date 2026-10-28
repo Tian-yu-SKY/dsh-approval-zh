@@ -88,6 +88,22 @@ window.__ModuleLoader__.load({
       'tool.install_bundle': '安装插件',
       'tool.plugin_manager': '管理插件',
       'tool.schedule_create': '创建定时任务',
+
+      'sync.strip': '需要你确认 · 会话同步',
+      'sync.title.push': '把这台机器的会话改动推送到同步远端？',
+      'sync.title.pull': '把远端的会话改动拉取到本机镜像？',
+      'sync.explain.push': '推送会把本机会话文件提交并上传到配置的同步远端。它不会强制覆盖远端：如果推送被拒绝，会先拉取合并再重试一次。',
+      'sync.explain.pull': '拉取会把远端的会话改动下载到本机同步镜像，采用保留双方的合并方式，不会静默覆盖本地内容。',
+      'sync.note': '确认后才会执行；点取消不会上传或下载任何内容。',
+      'sync.btn.cancel': '取消，什么都不做（Esc）',
+      'sync.btn.push': '确认推送（Enter）',
+      'sync.btn.pull': '确认拉取（Enter）',
+      'sync.hint': '回车 = 确认 · Esc = 取消',
+      'sync.submitted': '已提交，正在同步…',
+      'sync.error': '提交失败，请重试或刷新页面后再试。',
+      'sync.original': '英文原文（点击展开）',
+      'sync.tool.push': '会话同步推送',
+      'sync.tool.pull': '会话同步拉取',
     }
 
     const en = {
@@ -171,6 +187,22 @@ window.__ModuleLoader__.load({
       'tool.install_bundle': 'Install a plugin',
       'tool.plugin_manager': 'Manage plugins',
       'tool.schedule_create': 'Create a schedule',
+
+      'sync.strip': 'Confirmation needed · session sync',
+      'sync.title.push': 'Push this machine\'s session changes to the sync remote?',
+      'sync.title.pull': 'Pull the remote session changes into the local mirror?',
+      'sync.explain.push': 'The push commits the local session files and uploads them to the configured sync remote. It never force-pushes: a rejected push reconciles by pulling first and retries once.',
+      'sync.explain.pull': 'The pull downloads the remote session changes into the local sync mirror with a keep-both merge; local content is never silently overwritten.',
+      'sync.note': 'Nothing runs until you confirm; cancelling uploads or downloads nothing.',
+      'sync.btn.cancel': 'Cancel, do nothing (Esc)',
+      'sync.btn.push': 'Confirm push (Enter)',
+      'sync.btn.pull': 'Confirm pull (Enter)',
+      'sync.hint': 'Enter = confirm · Esc = cancel',
+      'sync.submitted': 'Submitted, syncing…',
+      'sync.error': 'Submit failed; retry or reload the page.',
+      'sync.original': 'English original (click to expand)',
+      'sync.tool.push': 'Session sync push',
+      'sync.tool.pull': 'Session sync pull',
     }
 
     /** ---------------------------------------------------------------- style */
@@ -293,6 +325,172 @@ window.__ModuleLoader__.load({
       const key = MODE_KEYS[mode]
       if (key === undefined) return { name: mode ?? '', desc: t('mode.other.desc') }
       return { name: t('mode.' + key + '.name'), desc: t('mode.' + key + '.desc') }
+    }
+
+    /**
+     * Recognize the session-sync plugin's fixed push/pull confirmation question.
+     *
+     * The plugin asks through the generic user-questions channel with hardcoded
+     * English copy. We only take over that exact card; every other question stays
+     * with the official question composer, so no third-party plugin is modified.
+     */
+    function recognizeSyncConfirm(pending) {
+      if (pending === undefined || pending === null) return null
+      if (pending.kind !== 'question') return null
+      const questions = pending.questions
+      if (!Array.isArray(questions) || questions.length !== 1) return null
+      const question = questions[0]
+      if (question === null || typeof question !== 'object') return null
+      if (typeof question.question !== 'string' || !Array.isArray(question.options)) return null
+      const labels = []
+      for (const option of question.options) {
+        if (option === null || typeof option !== 'object' || typeof option.label !== 'string') return null
+        labels.push(option.label)
+      }
+      const text = question.question.trim()
+      let action
+      if (/^Push local session changes to the sync remote\?$/i.test(text)) action = 'push'
+      else if (/^Pull remote session changes into the sync mirror\?$/i.test(text)) action = 'pull'
+      else return null
+      const approveLabel = action === 'push' ? 'Push' : 'Pull'
+      if (!labels.includes(approveLabel) || !labels.includes('Cancel')) return null
+      return { pending, question, action, approveLabel, cancelLabel: 'Cancel' }
+    }
+
+    /** Chinese confirmation card for the session-sync plugin's push/pull question. */
+    function SyncConfirmPanelZh(props) {
+      const matched = props.matched
+      const t = props.t
+      const [busy, setBusy] = React.useState(false)
+      const [failed, setFailed] = React.useState(false)
+      const active = React.useRef(true)
+
+      React.useEffect(() => {
+        active.current = true
+        return () => {
+          active.current = false
+        }
+      }, [])
+
+      if (matched === undefined || matched === null) return null
+      const { pending, question, action, approveLabel, cancelLabel } = matched
+
+      const submit = (label) => {
+        if (busy) return
+        setBusy(true)
+        setFailed(false)
+        let channel
+        try {
+          channel = typeof pending.snapshot === 'function' ? pending.snapshot().channel : undefined
+        } catch {
+          channel = undefined
+        }
+        Promise.resolve(pending.answer({ answers: [{ id: question.id, selected: [label] }] }))
+          .then(() => {
+            if (channel === 'rpc' && typeof pending.dismiss === 'function') {
+              Promise.resolve(pending.dismiss()).catch(() => {})
+            }
+          })
+          .catch(() => {
+            if (!active.current) return
+            setBusy(false)
+            setFailed(true)
+          })
+      }
+
+      const keydown = (event) => {
+        const element = event.target
+        if (event.defaultPrevented) return
+        if (!(element instanceof Element) || !event.currentTarget.contains(document.activeElement)) return
+        if (element.closest('input, textarea, select, [contenteditable="true"], [contenteditable=""]') !== null) return
+        if (event.key !== 'Enter' && event.key !== 'Escape') return
+        if (event.key === 'Enter' && element.closest('button, a[href], [role="button"]') !== null) return
+        if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return
+        event.preventDefault()
+        event.stopPropagation()
+        if (event.repeat || event.nativeEvent.isComposing || event.keyCode === 229) return
+        submit(event.key === 'Enter' ? approveLabel : cancelLabel)
+      }
+
+      const toolKey = action === 'push' ? 'sync.tool.push' : 'sync.tool.pull'
+      const titleKey = action === 'push' ? 'sync.title.push' : 'sync.title.pull'
+      const explainKey = action === 'push' ? 'sync.explain.push' : 'sync.explain.pull'
+      const allowKey = action === 'push' ? 'sync.btn.push' : 'sync.btn.pull'
+      const original = [question.question, typeof question.detail === 'string' ? question.detail : '']
+        .filter((part) => part !== '')
+        .join('\n\n')
+
+      return h(
+        'div',
+        {
+          className: 'dazh_root',
+          'data-question-key': typeof pending.key === 'string' ? pending.key : undefined,
+          'aria-busy': busy,
+          'aria-label': t(titleKey),
+          role: 'group',
+          onKeyDown: keydown,
+        },
+        h(
+          'div',
+          { className: 'dazh_card' },
+          h('div', { className: 'dazh_strip' }, h('span', { className: 'dazh_dot' }), t('sync.strip')),
+          h(
+            'div',
+            { className: 'dazh_body', tabIndex: 0, role: 'group', 'aria-label': t('aria.detail') },
+            h('div', { className: 'dazh_headline' }, t(titleKey)),
+            h(
+              'div',
+              { className: 'dazh_meta' },
+              h(
+                'span',
+                { className: 'dazh_toolTag' },
+                t('label.tool'),
+                h('b', null, t(toolKey)),
+                h('span', { className: 'dazh_toolName' }, action === 'push' ? 'sync_push' : 'sync_pull'),
+              ),
+            ),
+            h('div', { className: 'dazh_text' }, t(explainKey)),
+            h(
+              'div',
+              { className: 'dazh_section dazh_details' },
+              h('details', { className: 'dazh_details' }, [
+                h('summary', { key: 'summary' }, t('sync.original')),
+                h('pre', { key: 'text', className: 'dazh_originalBox' }, original),
+              ]),
+            ),
+          ),
+          h('div', { className: 'dazh_scope' }, t('sync.note')),
+          h(
+            'div',
+            { className: 'dazh_actions' },
+            h('div', { className: 'dazh_hint' }, busy ? t('sync.submitted') : failed ? t('sync.error') : t('sync.hint')),
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'dazh_btn dazh_reject',
+                disabled: busy,
+                onClick: () => {
+                  submit(cancelLabel)
+                },
+              },
+              t('sync.btn.cancel'),
+            ),
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'dazh_btn dazh_allow',
+                disabled: busy,
+                onClick: () => {
+                  submit(approveLabel)
+                },
+              },
+              t(allowKey),
+            ),
+          ),
+        ),
+      )
     }
 
     /** Tool call arguments worth showing next to the approval: command / path / description. */
@@ -644,6 +842,27 @@ window.__ModuleLoader__.load({
             inject: () => ({ resolveReason: (reason) => ctx.locale.resolveText(reason) }),
           },
           ApprovalPanelZh,
+        ),
+      )
+
+      // Recognized session-sync confirmations: a Chinese yes/no card. Unknown
+      // questions are left to the official question composer (selector returns
+      // null), so no other question UI is affected.
+      ctx.slots.inject('conversation.composer', () =>
+        ctx.slots.register(
+          {
+            name: 'conversation.composer',
+            priority: -1,
+            select: ({ pendingInteraction }) => {
+              try {
+                return recognizeSyncConfirm(pendingInteraction)
+              } catch {
+                return null
+              }
+            },
+            locale: NS,
+          },
+          SyncConfirmPanelZh,
         ),
       )
     }

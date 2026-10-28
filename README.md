@@ -1,18 +1,19 @@
 # dsh-approval-zh — DeepSeek Harness 中文审批卡片
 
-把 DeepSeek Harness（DSH）的**权限审批提示**换成简单易懂的中文卡片：一眼看懂「这是什么操作、为什么被拦、允许后会发生什么」。纯客户端插件，不改变审批结果，也不改变任何权限策略。
+把 DeepSeek Harness（DSH）的**权限审批提示**和**会话同步的推送/拉取确认**换成简单易懂的中文卡片：一眼看懂「这是什么操作、为什么被拦、确认后会发生什么」。纯客户端插件，不改变审批结果，也不改变任何权限策略。
 
-> GitHub 仓库：<https://github.com/Tian-yu-SKY/dsh-approval-zh>
+> GitHub 仓库：<https://github.com/Tian-yu-SKY/dsh-approval-zh>　·　版本：**v1.1.0**
 
-## 覆盖的三种审批
+## 覆盖的确认场景
 
 | 场景 | 卡片显示 |
 | --- | --- |
 | 自动审查（Auto review）未放行 | 中文标题 + 一句话解释 + 中文风险要点（如「修改 DSH 配置」「影响整个 DSH」「涉及网络或远程传输」），模型给的英文审查理由折叠在「自动审查理由（英文原文）」里 |
 | 沙箱提权（danger-full-access / workspace-write） | 说明要提升到哪一档权限、这一档能做什么、允许后仅本次生效 |
 | 其他工具请求授权 | 中文说明 + 操作理由 +（命令类工具）即将执行的命令 |
+| 会话同步 `sync_push` / `sync_pull` 确认（v1.1.0 新增） | 中文标题 + 说明推送/拉取会做什么、不会强制覆盖；英文原文折叠；按钮「取消，什么都不做（Esc）」「确认推送/确认拉取（Enter）」 |
 
-所有固定文案都有中文（中文界面）和英文（英文界面）两套，按钮为「拒绝，不执行（Esc）」「允许这一次（Enter）」，并提示该选择只对本次操作有效。
+所有固定文案都有中文（中文界面）和英文（英文界面）两套，审批按钮为「拒绝，不执行（Esc）」「允许这一次（Enter）」，并提示该选择只对本次操作有效。
 
 
 ## 界面示意
@@ -33,6 +34,26 @@
 > 拒绝后：这次操作不会执行，DSH 会把拒绝结果告诉模型。
 > [拒绝，不执行（Esc）]　[允许这一次（Enter）]
 > 这个选择只对当前这一次操作有效，不会改变任何默认权限。
+
+### 会话同步确认卡（v1.1.0）
+
+`dsh-session-sync` 插件在执行 `sync_push` / `sync_pull` 前，通过「用户提问」通道弹出的确认卡原本是硬编码英文（提问、选项、说明都写死在插件源码里）：
+
+> Push local session changes to the sync remote?
+> Upload local session changes to the sync remote (commit + push; never force-pushes).
+> 1 Push …　2 Cancel Do nothing.
+
+本插件 v1.1.0 只识别这一种确认提问并替换为中文卡片（其他插件的提问保持官方界面）：
+
+> 需要你确认 · 会话同步
+> **把这台机器的会话改动推送到同步远端？**
+> 操作：会话同步推送（sync_push）
+> 推送会把本机会话文件提交并上传到配置的同步远端。它不会强制覆盖远端：如果推送被拒绝，会先拉取合并再重试一次。
+> ▸ 英文原文（点击展开）
+> 确认后才会执行；点取消不会上传或下载任何内容。
+> [取消，什么都不做（Esc）]　[确认推送（Enter）]
+
+提交给宿主的是原始选项标签（`Push` / `Pull` / `Cancel`），`dsh-session-sync` 的判断逻辑不变；若该插件升级后改写文案，会自动回退到官方英文卡，不会误接管。
 
 ## 从 GitHub 安装
 
@@ -80,6 +101,7 @@ Web/服务器部署把 `--profile` 换成对应 profile 名；安装后同样需
 
 - 安装后 Host 会把 `client.js` 加入 Web 客户端启动图；无需重启 DSH，刷新页面即可
 - 下次出现权限审批时，卡片应为中文；若仍是官方英文样式，检查插件是否启用、页面是否刷新
+- 会话同步 `sync_push` / `sync_pull` 的确认卡也应为中文；点「取消」不会传输任何数据，可用于安全验证
 
 ## 卸载
 
@@ -91,7 +113,9 @@ Web/服务器部署把 `--profile` 换成对应 profile 名；安装后同样需
 
 ## 实现
 
-向 `conversation.composer` 链式插槽注册优先级 0 的接管项（官方审批面板为 1，链按优先级升序取第一个匹配项），选择器只匹配 `pendingInteraction.kind === 'approval'`；命令/路径通过会话标准 `useChat` 钩子按 `callId` 查找，不与其他插件争抢 `conversation.approval.detail` 子插槽；文案走 DSH 的 locale 服务（`approvalZh` 命名空间），主题只用 `--dsw-alias-*` 设计令牌。本插件崩溃时会自动回落到官方面板，审批不会失效。
+- 权限审批：向 `conversation.composer` 链式插槽注册优先级 0 的接管项（官方审批面板为 1，链按优先级升序取第一个匹配项），选择器只匹配 `pendingInteraction.kind === 'approval'`；命令/路径通过会话标准 `useChat` 钩子按 `callId` 查找，不与其他插件争抢 `conversation.approval.detail` 子插槽。
+- 会话同步确认卡：注册优先级 -1 的第二个接管项，只识别 `dsh-session-sync` 的 push/pull 固定提问（问题文案 + `Push`/`Pull`/`Cancel` 选项），其余提问返回 `null` 交还官方提问界面；回传原始选项标签，不修改任何第三方插件。
+- 文案走 DSH 的 locale 服务（`approvalZh` 命名空间，中英双字典），主题只用 `--dsw-alias-*` 设计令牌。本插件崩溃时插槽错误边界会让出，自动回落到官方界面，审批/提问不会失效。
 
 ## 许可
 
