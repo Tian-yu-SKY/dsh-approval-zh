@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Chinese approval card",
-    "description": "Turns permission approvals and the session-sync push/pull confirmation into plain Chinese: what the operation is, why it was blocked, and what confirming does. English originals fold away."
+    "description": "Turns permission approvals and session-sync confirmations into plain Chinese: what the operation is, why it was blocked, its possible consequences, and what confirming does. English originals fold away."
   }
 }

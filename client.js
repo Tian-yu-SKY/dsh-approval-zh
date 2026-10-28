@@ -41,6 +41,30 @@ window.__ModuleLoader__.load({
       'label.description': '命令说明',
       'label.allowEffect': '允许后会发生什么',
       'label.ask': '这次操作会做什么',
+      'label.consequences': '可能产生的后果',
+
+      'consequence.install': '插件代码会成为 DSH 的一部分，之后所有会话都会加载它；它可以读写本机文件、发起网络请求。',
+      'consequence.config': '会改变 DSH 配置，之后所有会话都按新配置运行；改错可能让某些功能失效。',
+      'consequence.profileWide': '影响整个 DSH（所有会话），不只当前这个会话。',
+      'consequence.network': '会向远程服务器传输数据，相关文件/内容可能离开这台电脑，无法撤回。',
+      'consequence.delete': '可能删除或覆盖文件，被删除的内容不保证能恢复。',
+      'consequence.outside': '会获得工作区之外的文件访问能力，可能读写或带走本机其他目录的文件。',
+      'consequence.secret': '可能读取或发送本机凭据、密钥、会话内容等敏感信息。',
+      'consequence.prod': '会在生产环境执行，可能影响线上服务和其他用户。',
+      'consequence.irreversible': '操作可能不可撤销，出问题后无法回滚。',
+      'consequence.unauthorized': '可能超出你明确授权的范围，例如影响长期配置或后台自动行为。',
+      'consequence.modify': '会修改文件或系统状态。',
+      'consequence.mode.full': '以「{mode}」执行时，命令可以读写工作区外的任意文件、访问网络，后续影响由你承担。',
+      'consequence.mode.workspace': '以「{mode}」执行时，可以修改当前工作区内的文件，但不能访问工作区外。',
+      'consequence.mode.readonly': '只读执行，不会修改任何文件。',
+      'consequence.tool.bash': '会在本机执行命令，可能修改文件、启动进程或访问网络。',
+      'consequence.tool.write': '会写入或修改目标文件，文件内容会真的改变。',
+      'consequence.tool.network': '会访问网络并接收外部返回的内容。',
+      'consequence.tool.generic': '会真的执行这次工具调用，可能产生副作用。',
+      'consequence.reviewOnly': '审查模型没有列出具体风险，但仍判断为需要你确认。',
+
+      'consequence.sync.push': '本机会话文件（含聊天内容）会上传到配置的同步远端，数据会离开这台电脑；推送不会强制覆盖远端。',
+      'consequence.sync.pull': '远端会话改动会合并进本机镜像，可能产生 fork 文件；不会静默覆盖本地内容。',
 
       'allow.auto': '这次操作会立即执行，不再经过自动审查。',
       'allow.escalate': '仅这一次会以「{mode}」权限执行，之后恢复当前权限。',
@@ -140,6 +164,30 @@ window.__ModuleLoader__.load({
       'label.description': 'Command description',
       'label.allowEffect': 'What happens if you allow',
       'label.ask': 'What this operation does',
+      'label.consequences': 'Possible consequences',
+
+      'consequence.install': 'The plugin code becomes part of DSH and loads in every later session; it can read and write local files and make network requests.',
+      'consequence.config': 'DSH configuration changes; every later session runs under the new configuration, and a bad change can break features.',
+      'consequence.profileWide': 'Affects the whole DSH profile (all sessions), not only this session.',
+      'consequence.network': 'Data is sent to a remote server; affected files/content may leave this machine and cannot be recalled.',
+      'consequence.delete': 'Files may be deleted or overwritten, and deleted content is not guaranteed to be recoverable.',
+      'consequence.outside': 'Grants file access outside the workspace; files in other local directories may be read, written, or taken away.',
+      'consequence.secret': 'Credentials, keys, session content, or other sensitive local information may be read or sent.',
+      'consequence.prod': 'Runs against production, which may affect live services and other users.',
+      'consequence.irreversible': 'The operation may be irreversible; a mistake cannot be rolled back.',
+      'consequence.unauthorized': 'May go beyond what you explicitly authorized, for example long-term configuration or background automation.',
+      'consequence.modify': 'Modifies files or system state.',
+      'consequence.mode.full': 'Under "{mode}", the command can read and write any file outside the workspace and reach the network; the follow-on effects are yours to bear.',
+      'consequence.mode.workspace': 'Under "{mode}", files inside the current workspace can be modified, but nothing outside it.',
+      'consequence.mode.readonly': 'Runs read-only and modifies no files.',
+      'consequence.tool.bash': 'Runs a command on this machine; it may modify files, start processes, or access the network.',
+      'consequence.tool.write': 'Writes or modifies the target file; its content really changes.',
+      'consequence.tool.network': 'Reaches the network and receives external content.',
+      'consequence.tool.generic': 'Really executes this tool call and may produce side effects.',
+      'consequence.reviewOnly': 'The reviewer listed no concrete risk, but still judged that you should confirm.',
+
+      'consequence.sync.push': 'Local session files (including chat content) are uploaded to the configured sync remote and leave this machine; the push never force-overwrites the remote.',
+      'consequence.sync.pull': 'Remote session changes merge into the local mirror and may produce fork files; local content is never silently overwritten.',
 
       'allow.auto': 'The operation runs immediately without another auto review.',
       'allow.escalate': 'Only this operation runs with "{mode}" permission; the current permission returns afterwards.',
@@ -229,6 +277,9 @@ window.__ModuleLoader__.load({
       '.dazh_details[open]>summary{margin-bottom:6px}',
       '.dazh_effects{display:flex;flex-direction:column;gap:2px;font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary)}',
       '.dazh_effects b{font-weight:500;color:var(--dsw-alias-label-secondary)}',
+      '.dazh_consequences{display:flex;flex-direction:column;gap:4px;margin:0;padding:8px 10px 8px 12px;list-style:none;border-radius:var(--dsw-radius-md);background:var(--dsw-alias-state-warn-tertiary)}',
+      '.dazh_consequences li{position:relative;padding-left:12px;font-size:13px;line-height:20px;color:var(--dsw-alias-state-warn-primary)}',
+      '.dazh_consequences li::before{content:"";position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:99px;background:currentColor}',
       '.dazh_scope{padding:0 16px 2px;font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary)}',
       '.dazh_actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 16px 14px}',
       '.dazh_hint{margin-right:auto;font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary)}',
@@ -325,6 +376,64 @@ window.__ModuleLoader__.load({
       const key = MODE_KEYS[mode]
       if (key === undefined) return { name: mode ?? '', desc: t('mode.other.desc') }
       return { name: t('mode.' + key + '.name'), desc: t('mode.' + key + '.desc') }
+    }
+
+    /** Risk labels that already imply a concrete consequence, in priority order. */
+    const RISK_TO_CONSEQUENCE = {
+      'risk.install': 'consequence.install',
+      'risk.delete': 'consequence.delete',
+      'risk.network': 'consequence.network',
+      'risk.outside': 'consequence.outside',
+      'risk.secret': 'consequence.secret',
+      'risk.irreversible': 'consequence.irreversible',
+      'risk.unauthorized': 'consequence.unauthorized',
+      'risk.config': 'consequence.config',
+      'risk.profileWide': 'consequence.profileWide',
+      'risk.prod': 'consequence.prod',
+      'risk.modify': 'consequence.modify',
+    }
+    const CONSEQUENCE_ORDER = Object.keys(RISK_TO_CONSEQUENCE)
+
+    /**
+     * Build the "possible consequences" list for one pending approval.
+     *
+     * The list is derived from the parsed reason, the risk labels already shown
+     * on the card, the permission mode when escalating, and the tool identity for
+     * plain tool approvals. It never invents a consequence the card cannot
+     * justify: an auto review without recognizable risks falls back to the
+     * generic reviewer sentence.
+     */
+    function consequenceKeys(parsed, risks, modeKey, toolName) {
+      const keys = []
+      const add = (key) => {
+        if (key !== undefined && !keys.includes(key) && keys.length < 4) keys.push(key)
+      }
+
+      if (parsed.variant === 'escalate') {
+        if (modeKey === 'workspace') add('consequence.mode.workspace')
+        else if (modeKey === 'readonly') add('consequence.mode.readonly')
+        else add('consequence.mode.full')
+      }
+
+      const riskSet = new Set(risks)
+      for (const riskKey of CONSEQUENCE_ORDER) {
+        if (riskSet.has(riskKey)) add(RISK_TO_CONSEQUENCE[riskKey])
+      }
+
+      if (parsed.variant === 'generic') {
+        if (['ops_bash', 'bash', 'ops_pwsh', 'pwsh', 'ops_terminal', 'terminal'].includes(toolName)) {
+          add('consequence.tool.bash')
+        } else if (['write', 'edit', 'ops_write', 'ops_edit'].includes(toolName)) {
+          add('consequence.tool.write')
+        } else if (['web_fetch', 'web_search', 'fetch'].includes(toolName)) {
+          add('consequence.tool.network')
+        } else {
+          add('consequence.tool.generic')
+        }
+      }
+
+      if (parsed.variant === 'auto' && keys.length === 0) add('consequence.reviewOnly')
+      return keys
     }
 
     /**
@@ -450,6 +559,18 @@ window.__ModuleLoader__.load({
               ),
             ),
             h('div', { className: 'dazh_text' }, t(explainKey)),
+            h(
+              'div',
+              { className: 'dazh_section' },
+              h('div', { className: 'dazh_sectionTitle' }, t('label.consequences')),
+              h('ul', { className: 'dazh_consequences' }, [
+                h(
+                  'li',
+                  { key: 'sync' },
+                  t(action === 'push' ? 'consequence.sync.push' : 'consequence.sync.pull'),
+                ),
+              ]),
+            ),
             h(
               'div',
               { className: 'dazh_section dazh_details' },
@@ -621,8 +742,10 @@ window.__ModuleLoader__.load({
       const showOriginal = rawReason !== undefined && !rawIsChinese
 
       const mode = parsed.variant === 'escalate' ? modeFace(t, parsed.mode) : undefined
+      const modeKey = parsed.variant === 'escalate' ? MODE_KEYS[parsed.mode] : undefined
       const risks = riskKeys(showOriginal ? rawReason : parsed.raw, 5)
       if (parsed.variant === 'auto' && risks.length === 0) risks.push('risk.reviewerDowngrade')
+      const consequences = consequenceKeys(parsed, risks, modeKey, pending.toolName)
       const label = toolLabel(t, pending.toolName)
       const toolMeta =
         pending.toolName !== undefined && pending.toolName !== '' && pending.toolName !== label
@@ -658,6 +781,23 @@ window.__ModuleLoader__.load({
         ),
         h('div', { key: 'explain', className: 'dazh_text' }, explain),
       ]
+
+      if (consequences.length > 0) {
+        bodyChildren.push(
+          h(
+            'div',
+            { key: 'consequences', className: 'dazh_section' },
+            h('div', { className: 'dazh_sectionTitle' }, t('label.consequences')),
+            h(
+              'ul',
+              { className: 'dazh_consequences' },
+              consequences.map((key) =>
+                h('li', { key }, t(key, { mode: mode === undefined ? '' : mode.name })),
+              ),
+            ),
+          ),
+        )
+      }
 
       if (mode !== undefined) {
         bodyChildren.push(
