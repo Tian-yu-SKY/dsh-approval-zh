@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Chinese approval card",
+    "description": "Turns the permission approval prompt into plain Chinese: what the operation is, why it was blocked, and what allowing it does. English auto-review reasons fold into an expandable original."
+  }
+}

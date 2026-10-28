@@ -1,0 +1,16 @@
+dsh-approval-zh
+Copyright (c) 2026 dsh-approval-zh contributors
+
+This is an independent third-party client plugin for DeepSeek Harness (DSH).
+It is not affiliated with, or endorsed by, DeepSeek.
+
+Parts of the approval interaction behavior (composer takeover, Enter/Escape
+handling, and looking up the command of the correlated tool call) are adapted
+from the following DSH packages, which are licensed under the Apache License,
+Version 2.0:
+
+  - @deepseek-ai/dsh-client-ui-approval
+  - @deepseek-ai/dsh-client-ui-chat
+
+The plugin bundles no code from those packages; it talks to them only through
+their public browser APIs (slots, locale, uiSession, useChat standard hook).

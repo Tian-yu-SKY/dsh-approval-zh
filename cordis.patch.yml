@@ -1,0 +1,5 @@
+# 审批中文化 bundle：插入一个纯客户端的 Web 插件行。
+# Host 侧 index.js 只导出空 apply，所有界面都在 client.js 里向 conversation.composer 链注册。
+- insert:
+    - id: approval-zh
+      name: 'dsh-approval-zh'
